@@ -281,10 +281,21 @@ async function runSearch(sRaw, mRaw){
     (stdData || []).forEach(r => {
       if(masterPN.has(r.pn) || !textMatch(r.pn, r.desc)) return;
       stdRows.push({src:"S", key:"", item:"", model:"", pn:r.pn, desc:r.desc, std:r.std,
-        old:null, latest:null, brinks:null, bdo:null, rcbc:null, sgdKey:"p" + r.pn, edited:false, isNew:false, conflicts:[]});
+        old:null, latest:null, brinks:null, bdo:null, rcbc:null, sgdKey:"none", edited:false, isNew:false, conflicts:[]});
     });
+    // SGD for a Standard row = the SGD of the last Parts List row with the same PN
+    if(stdRows.length){
+      const pns = [...new Set(stdRows.map(r => r.pn))];
+      const lastId = new Map();
+      for(let i = 0; i < pns.length; i += 200){
+        const {data, error} = await sb.from("pl_items").select("id,pn").filter("pn", "in", inList(pns.slice(i, i + 200)));
+        if(error) throw error;
+        (data || []).forEach(r => { const cur = lastId.get(r.pn); if(cur === undefined || r.id > cur) lastId.set(r.pn, r.id); });
+      }
+      stdRows.forEach(r => { if(lastId.has(r.pn)) r.sgdKey = "p" + lastId.get(r.pn); });
+    }
 
-    let plQ = sb.from("pl_items").select("pn,desc").limit(LIMIT * 2);
+    let plQ = sb.from("pl_items").select("id,pn,desc").limit(LIMIT * 2);
     if(term) plQ = plQ.or(`pn.ilike.%${term}%,desc.ilike.%${term}%`);
     const {data: plData, error: plErr} = await plQ;
     if(plErr) throw plErr;
@@ -300,7 +311,7 @@ async function runSearch(sRaw, mRaw){
     candidates.forEach(r => {
       if(stdSet.has(r.pn)) return;
       plRows.push({src:"P", key:"", item:"", model:"", pn:r.pn, desc:r.desc, std:null,
-        old:null, latest:null, brinks:null, bdo:null, rcbc:null, sgdKey:"p" + r.pn, edited:false, isNew:false, conflicts:[]});
+        old:null, latest:null, brinks:null, bdo:null, rcbc:null, sgdKey:"p" + r.id, edited:false, isNew:false, conflicts:[]});
     });
   }
 
@@ -527,8 +538,8 @@ async function runImport(){
     const batches = (arr, n) => { const out = []; for(let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
     const steps = [
       ["base_items", pub.base, "item"],
-      ["std_prices", pub.std, "pn"],
-      ["pl_items", pub.pl, "pn"],
+      ["std_prices", pub.std, "id"],
+      ["pl_items", pub.pl, "id"],
       ["sgd_values", sg.sgd, "key"]
     ];
     for(const [table, rows, conflict] of steps){

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d32f2f">
+<meta name="description" content="Parts List Price Check">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<title>Parts List Price Check</title>
+<style>
+:root{
+  color-scheme:light;
+  --red:#d32f2f;
+  --red-soft:#fdecec;
+  --red-line:#f2b8b5;
+  --red-btn:#ef5350;
+  --text:#000;
+  --muted:#222;
+  --bg:#fff;
+  --line:#dcdcdc;
+  --warn-bg:#fff3cd;
+  --err-bg:#fde8e7;
+}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45}
+header{background:var(--bg);border-bottom:3px solid var(--red);padding:14px 16px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+h1{margin:0 0 4px;font-size:19px;color:var(--red);letter-spacing:.02em}
+.sub{color:var(--muted);font-size:13px}
+main{padding:14px 16px 40px;max-width:1400px;margin:0 auto}
+.panel{background:var(--bg);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:10px;padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label.lbl{display:block;font-weight:bold;font-size:12px;color:#000;margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em}
+input[type="text"],input[type="number"],input[type="email"],input[type="password"]{width:100%;padding:10px 12px;font:inherit;font-size:15px;color:#000;background:#fff;border:1px solid #999;border-radius:6px}
+input:focus{outline:2px solid var(--red);outline-offset:0;border-color:transparent}
+input[readonly]{background:#f2f2f2}
+.hint{color:var(--muted);font-size:12px;margin-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--red);background:#fff;color:#000;padding:4px 10px;border-radius:999px;cursor:pointer;font:inherit;font-size:12px}
+.chip:hover{background:var(--red-soft)}
+.actions{display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border-radius:6px;padding:9px 14px;border:1px solid #000;background:#fff;color:#000}
+button:hover{background:var(--red-soft)}
+button:disabled{opacity:.5;cursor:default}
+button.primary{background:var(--red-btn);border-color:var(--red-btn);color:#000;font-weight:bold}
+button.primary:hover{background:#ff6f6c}
+button.danger{border-color:var(--red);color:#000;background:var(--red-soft)}
+button.small{padding:4px 10px;font-size:12px}
+.status{padding:10px 12px;border-radius:6px;background:var(--red-soft);color:#000;margin-bottom:12px;font-size:13px;border-left:4px solid var(--red)}
+.status.warn{background:var(--warn-bg);border-left-color:#c79100}
+.notice{padding:10px 12px;border-radius:6px;background:var(--warn-bg);color:#000;margin-bottom:12px;font-size:13px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-top:3px solid var(--red);border-radius:8px;padding:8px 12px;min-width:120px}
+.stat b{display:block;font-size:16px;color:#000}
+.stat span{font-size:11px;color:#000;text-transform:uppercase;letter-spacing:.03em}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+table{border-collapse:collapse;width:100%;min-width:1040px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap;color:#000}
+th{background:var(--red-soft);font-size:12px;position:sticky;top:0;border-bottom:2px solid var(--red)}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.desc{white-space:normal;min-width:200px}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;border:1px solid #000;font-size:11px;font-weight:bold;color:#000;background:#fff}
+.b-m{background:#ffd6d6}
+.b-s{background:#fff}
+.b-p{background:#f5f5f5}
+.tag{display:inline-block;margin-left:6px;font-size:11px;font-weight:bold;color:#000;background:var(--red-soft);padding:0 5px;border-radius:3px}
+.flag{color:#000;background:var(--warn-bg);font-size:12px;font-weight:bold;margin-left:6px;padding:0 5px;border-radius:3px}
+.empty{padding:40px 20px;text-align:center;color:#000}
+.note{font-size:12px;color:#000;margin-top:10px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.overlay[hidden]{display:none}
+.dialog{background:#fff;color:#000;border:1px solid #000;border-top:4px solid var(--red);border-radius:12px;width:100%;max-width:640px;max-height:92vh;overflow:auto;padding:18px}
+.dialog h2{margin:0 0 12px;font-size:17px;color:var(--red)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.fields .wide{grid-column:1/-1}
+.err{background:var(--err-bg);color:#000;padding:8px 10px;border-radius:6px;margin-top:12px;font-size:13px;border-left:4px solid var(--red)}
+.err[hidden]{display:none}
+.chk{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px}
+.dactions{display:flex;gap:8px;margin-top:16px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.hidden{display:none !important}
+.progress{font-size:13px;margin-top:8px}
+@media (max-width:640px){
+  header{padding:12px 14px} main{padding:12px 12px 32px}
+  .grid,.fields{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>PARTS LIST PRICE CHECK</h1>
+    <div class="sub">Maghanap gamit ang Part Number o Description. Ang Model ay opsyonal para i-filter ang Master List.</div>
+  </div>
+  <div class="actions" style="margin-top:0">
+    <button id="btnAdd" class="primary hidden">+ Bagong item</button>
+    <button id="btnImport" class="hidden">Import data</button>
+    <button id="btnSignIn">Mag-sign in (Google)</button>
+    <button id="btnSignOut" class="hidden">Mag-sign out</button>
+  </div>
+</header>
+<main>
+  <div id="notice"></div>
+  <div class="stats" id="stats"></div>
+
+  <section class="panel">
+    <div class="grid">
+      <div>
+        <label class="lbl" for="q">Search: Part Number o Description</label>
+        <input type="text" id="q" placeholder="hal. 3100T135 o COIN GUIDE" autocomplete="off">
+        <div class="hint">Hindi case-sensitive. Puwede ring partial na salita.</div>
+      </div>
+      <div>
+        <label class="lbl" for="m">Model (opsyonal)</label>
+        <input type="text" id="m" placeholder="hal. UW-F, CCE-411 o ALL" autocomplete="off">
+        <div class="hint">Maramihan: lagyan ng kuwit. Ang ALL ay para sa lahat. Ang Model ay para sa Master List lang.</div>
+        <div class="chips" id="chips"></div>
+      </div>
+    </div>
+    <div class="actions"><button id="clear">Linisin ang search</button></div>
+  </section>
+
+  <div id="importPanel" class="panel hidden">
+    <label class="lbl">Import ng data (owner lang)</label>
+    <div class="hint">Piliin ang public.json at owner_sgd.json. Ginagawa ito isang beses lang, o kapag may bagong data.</div>
+    <div class="actions">
+      <input type="file" id="fPublic" accept="application/json,.json">
+      <input type="file" id="fSgd" accept="application/json,.json">
+      <button class="primary" id="btnRunImport">I-import</button>
+      <button id="btnCloseImport">Isara</button>
+    </div>
+    <div class="progress" id="importProgress"></div>
+  </div>
+
+  <div id="status" class="status" role="status">Mag-type ng Part Number o Description sa search box para magsimula.</div>
+  <div id="results"></div>
+  <div class="note" id="foot"></div>
+</main>
+
+<div class="overlay" id="modal" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h2 id="mTitle"></h2>
+    <div class="fields" id="mFields"></div>
+    <div class="err" id="mErr" hidden></div>
+    <label class="chk" id="mDupWrap" hidden><input type="checkbox" id="mDupOk"> Idagdag pa rin bilang bagong row</label>
+    <div class="dactions">
+      <button class="danger" id="mRevert" hidden></button>
+      <span class="spacer"></span>
+      <button id="mCancel">Kanselahin</button>
+      <button class="primary" id="mSave">I-save</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const MODELS = ["ALL","CCE-2040","CCE-411","GFB-800","GFS-100","GFS-220","GNH","RBG","USF-52","UW-500","UW-F"];
+const LIMIT = 500;
+const FIELDS = [
+  {k:"model", label:"Model", type:"text"},
+  {k:"pn", label:"Part Number", type:"text"},
+  {k:"desc", label:"Description", type:"text", wide:true},
+  {k:"std", label:"Standard Peso Price", type:"num"},
+  {k:"sgd", label:"SGD Price", type:"num"},
+  {k:"old", label:"Old Price", type:"num"},
+  {k:"latest", label:"Latest Price", type:"num"},
+  {k:"brinks", label:"Brinks Price", type:"num"},
+  {k:"bdo", label:"BDO Price", type:"num"},
+  {k:"rcbc", label:"RCBC Price", type:"num"}
+];
+
+const sb = supabase.createClient(CFG.url, CFG.key, {auth:{persistSession:true, detectSessionInUrl:true}});
+
+const state = {
+  isOwner:false, session:null,
+  baseRows:[], overrides:new Map(), sgd:new Map(),
+  shown:[], modal:null, loaded:false
+};
+
+const fmt = v => (v === null || v === undefined || v === "" || Number.isNaN(v)) ? "–"
+  : Number(v).toLocaleString("en-PH", {minimumFractionDigits:2, maximumFractionDigits:2});
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+const safeTerm = s => s.replace(/[%_*,()"\\]/g, " ").trim();
+const inList = vals => "(" + vals.map(v => '"' + String(v).replace(/"/g, '\\"') + '"').join(",") + ")";
+
+function showNotice(msg){ $("notice").innerHTML = msg ? `<div class="notice">${esc(msg)}</div>` : ""; }
+
+// ---------- Master list = base rows + owner edits + new items ----------
+function effectiveMaster(){
+  const out = [];
+  for(const b of state.baseRows){
+    const key = "b" + b.item;
+    const ov = state.overrides.get(key);
+    const src = ov || b;
+    out.push({key, item:b.item, model:(src.model || ""), pn:b.pn, desc:(src.desc || ""),
+      std:src.std, old:src.old, latest:src.latest, brinks:src.brinks, bdo:src.bdo, rcbc:src.rcbc,
+      sgdKey: ov ? "o" + key : "b" + b.item, edited:!!ov, isNew:false});
+  }
+  for(const [key, ov] of state.overrides){
+    if(!key.startsWith("n")) continue;
+    out.push({key, item:ov.item, model:(ov.model || ""), pn:(ov.pn || ""), desc:(ov.desc || ""),
+      std:ov.std, old:ov.old, latest:ov.latest, brinks:ov.brinks, bdo:ov.bdo, rcbc:ov.rcbc,
+      sgdKey:"o" + key, edited:false, isNew:true});
+  }
+  return out;
+}
+
+async function loadMaster(){
+  const [b, o] = await Promise.all([
+    sb.from("base_items").select("*").order("item").limit(5000),
+    sb.from("overrides").select("*").limit(5000)
+  ]);
+  if(b.error) throw b.error;
+  if(o.error) throw o.error;
+  state.baseRows = b.data || [];
+  state.overrides = new Map((o.data || []).map(r => [r.key, r]));
+}
+
+// SGD values are fetched only for the rows on screen. For non-owners RLS returns nothing.
+async function fetchSgd(keys){
+  if(!state.isOwner) return;
+  const need = [...new Set(keys)].filter(k => !state.sgd.has(k));
+  for(let i = 0; i < need.length; i += 200){
+    const chunk = need.slice(i, i + 200);
+    const {data, error} = await sb.from("sgd_values").select("key,sgd").filter("key", "in", inList(chunk));
+    if(error) throw error;
+    const found = new Map((data || []).map(r => [r.key, r.sgd]));
+    chunk.forEach(k => state.sgd.set(k, found.has(k) ? found.get(k) : null));
+  }
+}
+
+// ---------- Search (same rules as the original page) ----------
+async function runSearch(sRaw, mRaw){
+  const master = effectiveMaster();
+  const s = sRaw.trim().toLowerCase();
+  const mNorm = mRaw.trim();
+  const mAll = mNorm === "" || mNorm.toUpperCase() === "ALL";
+  const mList = mNorm.replace(/\s/g, "").toUpperCase().split(",").filter(Boolean);
+  const textMatch = (pn, desc) => !s || (pn || "").toLowerCase().includes(s) || (desc || "").toLowerCase().includes(s);
+
+  const hits = master.filter(r => (r.pn || r.desc) && textMatch(r.pn, r.desc)
+    && (mAll || mList.includes((r.model || "").trim().toUpperCase())));
+
+  const groups = new Map();
+  hits.forEach(r => {
+    const key = r.pn || ("#R" + r.key);
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  });
+
+  const masterRows = [];
+  for(const rows of groups.values()){
+    const first = rows[0];
+    const pick = f => {
+      const vals = rows.map(x => x[f]).filter(v => v !== null && v !== undefined && v !== "" && !Number.isNaN(v));
+      return vals.length ? Math.max(...vals) : null;
+    };
+    const conflicts = [];
+    [["std","Standard Peso"],["old","Old"],["latest","Latest"],["brinks","Brinks"],["bdo","BDO"],["rcbc","RCBC"]].forEach(([f,name]) => {
+      const vals = rows.map(x => x[f]).filter(v => v !== null && v !== undefined && v !== "");
+      if(new Set(vals).size > 1) conflicts.push(name);
+    });
+    masterRows.push({src:"M", key:first.key, item:first.item, model:first.model, pn:first.pn, desc:first.desc,
+      std:pick("std"), old:pick("old"), latest:pick("latest"), brinks:pick("brinks"), bdo:pick("bdo"), rcbc:pick("rcbc"),
+      sgdKey:first.sgdKey, edited:first.edited, isNew:first.isNew, conflicts});
+  }
+
+  const masterPN = new Set(master.map(r => r.pn).filter(Boolean));
+  let stdRows = [], plRows = [];
+  if(mAll){
+    const term = safeTerm(s);
+    let stdQ = sb.from("std_prices").select("pn,desc,std").limit(LIMIT * 2);
+    if(term) stdQ = stdQ.or(`pn.ilike.%${term}%,desc.ilike.%${term}%`);
+    const {data: stdData, error: stdErr} = await stdQ;
+    if(stdErr) throw stdErr;
+    (stdData || []).forEach(r => {
+      if(masterPN.has(r.pn) || !textMatch(r.pn, r.desc)) return;
+      stdRows.push({src:"S", key:"", item:"", model:"", pn:r.pn, desc:r.desc, std:r.std,
+        old:null, latest:null, brinks:null, bdo:null, rcbc:null, sgdKey:"p" + r.pn, edited:false, isNew:false, conflicts:[]});
+    });
+
+    let plQ = sb.from("pl_items").select("pn,desc").limit(LIMIT * 2);
+    if(term) plQ = plQ.or(`pn.ilike.%${term}%,desc.ilike.%${term}%`);
+    const {data: plData, error: plErr} = await plQ;
+    if(plErr) throw plErr;
+    const candidates = (plData || []).filter(r => !masterPN.has(r.pn) && textMatch(r.pn, r.desc));
+    // Exclude parts that already appear in the Standard list
+    const stdSet = new Set();
+    const pns = candidates.map(r => r.pn);
+    for(let i = 0; i < pns.length; i += 200){
+      const {data, error} = await sb.from("std_prices").select("pn").filter("pn", "in", inList(pns.slice(i, i + 200)));
+      if(error) throw error;
+      (data || []).forEach(r => stdSet.add(r.pn));
+    }
+    candidates.forEach(r => {
+      if(stdSet.has(r.pn)) return;
+      plRows.push({src:"P", key:"", item:"", model:"", pn:r.pn, desc:r.desc, std:null,
+        old:null, latest:null, brinks:null, bdo:null, rcbc:null, sgdKey:"p" + r.pn, edited:false, isNew:false, conflicts:[]});
+    });
+  }
+
+  const total = masterRows.length + stdRows.length + plRows.length;
+  let budget = LIMIT;
+  const take = arr => { const out = arr.slice(0, Math.max(0, budget)); budget -= out.length; return out; };
+  const shown = [...take(masterRows), ...take(stdRows), ...take(plRows)];
+  return {total, masterRows: masterRows.length, stdRows: stdRows.length, plRows: plRows.length, shown};
+}
+
+// ---------- Rendering ----------
+function badge(src){
+  if(src === "M") return '<span class="badge b-m">Master</span>';
+  if(src === "S") return '<span class="badge b-s">Standard</span>';
+  return '<span class="badge b-p">Parts List</span>';
+}
+
+function actionCell(x, i){
+  if(!state.isOwner) return "";
+  if(x.src === "M") return `<button class="small" data-act="edit" data-i="${i}">I-edit</button>`;
+  return `<button class="small" data-act="addsrc" data-i="${i}">Idagdag sa Master</button>`;
+}
+
+function rowHtml(x, i){
+  const tags = x.isNew ? '<span class="tag">Bago</span>' : (x.edited ? '<span class="tag">Na-edit</span>' : "");
+  const flag = x.conflicts && x.conflicts.length
+    ? `<span class="flag" title="Magkaiba ang presyo sa duplicate row: ${esc(x.conflicts.join(", "))}">⚠ Magkaiba ang presyo</span>` : "";
+  const sgdCell = state.isOwner ? `<td class="num">${fmt(state.sgd.get(x.sgdKey))}</td>` : "";
+  return `<tr>
+    <td>${badge(x.src)}</td>
+    <td>${esc(x.item)}</td>
+    <td>${esc(x.model)}</td>
+    <td>${esc(x.pn)}${tags}${flag}</td>
+    <td class="desc">${esc(x.desc)}</td>
+    <td class="num">${fmt(x.std)}</td>
+    <td class="num">${fmt(x.old)}</td>
+    <td class="num">${fmt(x.latest)}</td>
+    <td class="num">${fmt(x.brinks)}</td>
+    <td class="num">${fmt(x.bdo)}</td>
+    <td class="num">${fmt(x.rcbc)}</td>
+    ${sgdCell}
+    <td>${actionCell(x, i)}</td>
+  </tr>`;
+}
+
+function renderHeader(){
+  const sgdTh = state.isOwner ? "<th>SGD</th>" : "";
+  return `<tr><th>Source</th><th>Item No</th><th>Model</th><th>Part Number</th><th>Description</th>
+    <th>Standard Peso</th><th>Old</th><th>Latest</th><th>Brinks</th><th>BDO</th><th>RCBC</th>${sgdTh}<th></th></tr>`;
+}
+
+function renderStats(){
+  const master = effectiveMaster();
+  const pnSet = new Set(master.map(r => r.pn).filter(Boolean));
+  const models = new Set(master.map(r => (r.model || "").trim()).filter(Boolean));
+  const items = [["Items sa Master List", master.length], ["Models", models.size], ["Part Number sa Master", pnSet.size]];
+  $("stats").innerHTML = items.map(([k,v]) => `<div class="stat"><b>${Number(v).toLocaleString("en-PH")}</b><span>${k}</span></div>`).join("");
+}
+
+function applyChrome(){
+  $("btnAdd").classList.toggle("hidden", !state.isOwner);
+  $("btnImport").classList.toggle("hidden", !state.isOwner);
+  $("btnSignIn").classList.toggle("hidden", !!state.session);
+  $("btnSignOut").classList.toggle("hidden", !state.session);
+  if(!state.session) showNotice("Read-only ang view na ito. Mag-sign in gamit ang Google para makita ang lahat ng presyo.");
+  else if(!state.isOwner) showNotice("Naka-sign in ka, pero view lang ang access mo. Hindi mo makikita ang SGD price at hindi ka makakapag-edit.");
+  else showNotice("");
+}
+
+async function render(){
+  renderStats();
+  applyChrome();
+  const sRaw = $("q").value, mRaw = $("m").value;
+  const statusEl = $("status"), results = $("results");
+
+  if(sRaw.trim() === "" && mRaw.trim() === ""){
+    statusEl.className = "status";
+    statusEl.textContent = "Mag-type ng Part Number o Description sa search box para magsimula.";
+    results.innerHTML = ""; $("foot").textContent = ""; state.shown = [];
+    return;
+  }
+
+  let res;
+  try{
+    res = await runSearch(sRaw, mRaw);
+    const keys = res.shown.map(x => x.sgdKey);
+    await fetchSgd(keys);
+  }catch(e){
+    statusEl.className = "status warn";
+    statusEl.textContent = "Hindi ma-load ang data: " + (e.message || e);
+    results.innerHTML = ""; return;
+  }
+
+  if(res.total === 0){
+    statusEl.className = "status warn";
+    statusEl.textContent = "Walang nahanap na tumugma sa iyong paghahanap. Subukan ang ibang Part Number, Description, o Model.";
+    results.innerHTML = `<div class="panel empty">Walang resulta.</div>`;
+    $("foot").textContent = ""; state.shown = [];
+    return;
+  }
+
+  const conflictCount = res.shown.filter(x => x.conflicts && x.conflicts.length).length;
+  const warn = [];
+  if(res.total > LIMIT) warn.push(`Ipinapakita ang unang ${LIMIT}. Pinuhin ang search.`);
+  if(conflictCount) warn.push(`${conflictCount} PN ang may magkaibang presyo sa Master List.`);
+  statusEl.className = "status" + (warn.length ? " warn" : "");
+  statusEl.textContent = `Nakita: ${res.total} resulta (${res.masterRows} sa Master List, ${res.stdRows} sa Standard Price, ${res.plRows} sa Parts List)` + (warn.length ? "  |  " + warn.join("  |  ") : "");
+
+  state.shown = res.shown;
+  results.innerHTML = `<div class="tablewrap"><table><thead>${renderHeader()}</thead><tbody>${res.shown.map(rowHtml).join("")}</tbody></table></div>`;
+  const sgdNote = state.isOwner ? " Ang SGD ay mula sa Parts List." : "";
+  $("foot").textContent = "Ang Standard Price ay nasa piso (PHP)." + sgdNote + " Kapag may duplicate row sa Master List, ang presyo ay ang pinakamataas.";
+}
+
+// ---------- Modal: add / edit (owner only) ----------
+function openModal(mode, row, prefill){
+  if(!state.isOwner) return;
+  const v = Object.assign({}, row || {}, prefill || {});
+  const sgdVal = row ? state.sgd.get(row.sgdKey) : (prefill && prefill.sgd !== undefined ? prefill.sgd : null);
+  if(row) v.sgd = sgdVal;
+  state.modal = {mode, key: row ? row.key : null, row: row || null, sgd: sgdVal ?? null};
+  $("mTitle").textContent = mode === "add" ? "Bagong item" : `I-edit ang item ${row.item}`;
+  $("mFields").innerHTML = FIELDS.map(f => {
+    const readonly = (mode === "edit" && f.k === "pn") ? " readonly" : "";
+    const val = v[f.k] === null || v[f.k] === undefined ? "" : esc(v[f.k]);
+    const cls = f.wide ? ' class="wide"' : "";
+    const inputType = f.type === "num" ? 'type="text" inputmode="decimal"' : 'type="text"';
+    return `<div${cls}><label class="lbl" for="f_${f.k}">${esc(f.label)}</label>
+      <input ${inputType} id="f_${f.k}" value="${val}"${readonly}></div>`;
+  }).join("");
+  $("mErr").hidden = true; $("mDupWrap").hidden = true; $("mDupOk").checked = false;
+  const canRevert = mode === "edit" && row && (row.edited || row.isNew);
+  const rb = $("mRevert");
+  rb.hidden = !canRevert;
+  rb.dataset.stage = "";
+  rb.textContent = row && row.isNew ? "Burahin ang item" : "Ibalik sa orihinal";
+  $("mSave").disabled = false;
+  $("modal").hidden = false;
+  setTimeout(() => { const el = $(mode === "add" ? "f_pn" : "f_model"); if(el) el.focus(); }, 0);
+}
+
+function closeModal(){ state.modal = null; $("modal").hidden = true; }
+function showErr(msg){ const el = $("mErr"); el.textContent = msg; el.hidden = false; }
+
+async function saveModal(){
+  const m = state.modal; if(!m || !state.isOwner) return;
+  const vals = {};
+  for(const f of FIELDS){
+    const raw = $("f_" + f.k).value.trim();
+    if(f.type === "num"){
+      if(raw === ""){ vals[f.k] = null; continue; }
+      const n = Number(raw.replace(/,/g, ""));
+      if(!Number.isFinite(n)){ showErr(`Dapat numero ang ${f.label}.`); return; }
+      vals[f.k] = n;
+    } else {
+      vals[f.k] = raw === "" ? null : raw;
+    }
+  }
+  let key, item, pn;
+  if(m.mode === "add"){
+    if(!vals.pn){ showErr("Kailangan ang Part Number."); return; }
+    const master = effectiveMaster();
+    const exists = master.some(r => r.pn === vals.pn);
+    if(exists && !$("mDupOk").checked){
+      $("mDupWrap").hidden = false;
+      showErr("May existing na Part Number sa Master List. Lagyan ng check kung idadagdag pa rin bilang bagong row.");
+      return;
+    }
+    key = "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    item = master.reduce((mx, r) => Math.max(mx, Number(r.item) || 0), 0) + 1;
+    pn = vals.pn;
+  } else {
+    key = m.key; item = m.row.item; pn = m.row.pn;
+  }
+
+  $("mSave").disabled = true;
+  const row = {key, item, model:vals.model, pn, desc:vals.desc, std:vals.std, old:vals.old, latest:vals.latest,
+    brinks:vals.brinks, bdo:vals.bdo, rcbc:vals.rcbc, updated_at:new Date().toISOString()};
+  try{
+    const a = await sb.from("overrides").upsert(row);
+    if(a.error) throw a.error;
+    const b = await sb.from("sgd_values").upsert({key:"o" + key, sgd:vals.sgd});
+    if(b.error) throw b.error;
+    state.overrides.set(key, row);
+    state.sgd.set("o" + key, vals.sgd);
+    closeModal(); await render();
+  }catch(e){
+    showErr("May error habang nag-se-save. " + (e.message || ""));
+    $("mSave").disabled = false;
+  }
+}
+
+async function revertModal(){
+  const m = state.modal; if(!m || !m.row) return;
+  const rb = $("mRevert");
+  if(rb.dataset.stage !== "confirm"){
+    rb.dataset.stage = "confirm";
+    rb.textContent = "Sigurado ka? I-click ulit";
+    return;
+  }
+  rb.disabled = true;
+  try{
+    const a = await sb.from("overrides").delete().eq("key", m.key);
+    if(a.error) throw a.error;
+    const b = await sb.from("sgd_values").delete().eq("key", "o" + m.key);
+    if(b.error) throw b.error;
+    state.overrides.delete(m.key);
+    state.sgd.delete("o" + m.key);
+    closeModal(); await render();
+  }catch(e){
+    showErr("May error habang nag-se-save. " + (e.message || ""));
+  }finally{ rb.disabled = false; }
+}
+
+// ---------- Owner import (from the two JSON files) ----------
+async function runImport(){
+  const pf = $("fPublic").files[0], sf = $("fSgd").files[0];
+  if(!pf || !sf){ $("importProgress").textContent = "Piliin muna ang dalawang file."; return; }
+  const prog = t => $("importProgress").textContent = t;
+  try{
+    prog("Binabasa ang mga file...");
+    const pub = JSON.parse(await pf.text());
+    const sg = JSON.parse(await sf.text());
+    const batches = (arr, n) => { const out = []; for(let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
+    const steps = [
+      ["base_items", pub.base, "item"],
+      ["std_prices", pub.std, "pn"],
+      ["pl_items", pub.pl, "pn"],
+      ["sgd_values", sg.sgd, "key"]
+    ];
+    for(const [table, rows, conflict] of steps){
+      let done = 0;
+      for(const chunk of batches(rows, 500)){
+        const {error} = await sb.from(table).upsert(chunk, {onConflict: conflict});
+        if(error) throw error;
+        done += chunk.length;
+        prog(`${table}: ${done.toLocaleString("en-PH")} / ${rows.length.toLocaleString("en-PH")}`);
+      }
+    }
+    prog("Tapos na ang import.");
+    state.sgd = new Map();
+    await loadMaster();
+    await render();
+  }catch(e){
+    prog("Hindi natapos ang import: " + (e.message || e));
+  }
+}
+
+// ---------- Auth ----------
+async function signIn(){
+  await sb.auth.signInWithOAuth({provider:"google", options:{redirectTo: location.origin + location.pathname}});
+}
+async function signOut(){ await sb.auth.signOut(); }
+
+function setSession(session){
+  state.session = session;
+  state.isOwner = !!session && (session.user.email || "").toLowerCase() === CFG.owner.toLowerCase();
+  state.sgd = new Map();
+}
+
+// ---------- Events ----------
+$("results").addEventListener("click", e => {
+  const b = e.target.closest("button[data-act]"); if(!b) return;
+  const x = state.shown[Number(b.dataset.i)]; if(!x) return;
+  if(b.dataset.act === "edit"){
+    const row = effectiveMaster().find(r => r.key === x.key);
+    if(row) openModal("edit", row);
+  } else if(b.dataset.act === "addsrc"){
+    openModal("add", null, {pn:x.pn, desc:x.desc, std:x.std, sgd:state.sgd.get(x.sgdKey) ?? null, model:""});
+  }
+});
+$("btnAdd").addEventListener("click", () => openModal("add", null, {}));
+$("btnImport").addEventListener("click", () => $("importPanel").classList.remove("hidden"));
+$("btnCloseImport").addEventListener("click", () => $("importPanel").classList.add("hidden"));
+$("btnRunImport").addEventListener("click", runImport);
+$("btnSignIn").addEventListener("click", signIn);
+$("btnSignOut").addEventListener("click", signOut);
+$("mSave").addEventListener("click", saveModal);
+$("mRevert").addEventListener("click", revertModal);
+$("mCancel").addEventListener("click", closeModal);
+$("modal").addEventListener("click", e => { if(e.target.id === "modal") closeModal(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && state.modal) closeModal(); });
+
+$("chips").innerHTML = MODELS.map(x => `<button class="chip" type="button" data-v="${esc(x)}">${esc(x)}</button>`).join("");
+$("chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if(!b) return;
+  $("m").value = b.dataset.v; debounced();
+});
+let timer;
+const debounced = () => { clearTimeout(timer); timer = setTimeout(render, 250); };
+$("q").addEventListener("input", debounced);
+$("m").addEventListener("input", debounced);
+$("clear").addEventListener("click", () => { $("q").value = ""; $("m").value = ""; render(); });
+
+// ---------- Start ----------
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(() => {}); }
+
+sb.auth.onAuthStateChange(async (_event, session) => {
+  setSession(session);
+  try{ await loadMaster(); }catch(e){ showNotice("Hindi ma-load ang data: " + (e.message || e)); }
+  state.loaded = true;
+  render();
+});
+</script>
+</body>
+</html>
